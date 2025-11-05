@@ -1,23 +1,28 @@
 package com.example.proyecto_1
 
-import android.R
+import com.example.proyecto_1.R
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -32,6 +37,17 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.proyecto_1.ui.theme.Proyecto_1Theme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pets
+import kotlinx.coroutines.launch
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
+import retrofit2.http.GET
+import retrofit2.http.POST
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -49,6 +65,41 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+data class ModeloRegistro(
+    val dato1: String,
+    val dato2: Double,
+    val dato3: Int
+)
+interface ApiService {
+    @POST("servicio.php?iniciarSesion")
+    @FormUrlEncoded
+    suspend fun iniciarSesion(
+        @Field("usuario") usuario: String,
+        @Field("contrasena") contrasena: String
+
+        ): Response<String>
+
+    @GET("servicio.php?registros")
+    suspend fun registros(): List<ModeloRegistro>
+
+    @POST("servicio.php?agregarRegistro")
+    @FormUrlEncoded
+    suspend fun agregarRegistro(
+        @Field("dato1") dato1: String,
+        @Field("dato2") dato2: Double,
+        @Field("dato3") dato3: Int
+    ): Response<Unit>
+}
+
+val retrofit = Retrofit.Builder()
+    .baseUrl("https://intended-antibody-desperate-relay.trycloudflare.com/api/")
+    .addConverterFactory(ScalarsConverterFactory.create())
+    .addConverterFactory(GsonConverterFactory.create())
+    .build()
+
+val api = retrofit.create(ApiService::class.java)
+
+
 @Composable
 fun AppContent(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
@@ -62,6 +113,7 @@ fun AppContent(modifier: Modifier = Modifier) {
         composable("mascotaslst") { MascotaslstContent(navController, modifier) }
         composable("padrinoslst") { PadrinoslstContent(navController, modifier) }
         composable("apoyolst") { ApoyoslstContent(navController, modifier) }
+
     }
 }
 
@@ -70,6 +122,25 @@ fun LoginContent(navController: NavHostController, modifier: Modifier) {
     val context = LocalContext.current
     var usuario by remember { mutableStateOf("") }
     var contrasena by remember { mutableStateOf("") }
+
+    val scope = rememberCoroutineScope()
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.fondo_animales),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xAAFFFFFF))
+        )
+    }
 
     Column(
         modifier = modifier
@@ -108,15 +179,32 @@ fun LoginContent(navController: NavHostController, modifier: Modifier) {
 
         Button(
             onClick = {
-                val usuarioValido = "admin"
-                val contrasenaValida = "12345"
+                scope.launch {
+                    try {
 
-                if (usuario == usuarioValido && contrasena == contrasenaValida) {
-                    Toast.makeText(context, "¡Bienvenido, $usuario!", Toast.LENGTH_SHORT).show()
-                    navController.navigate("menu")
-                } else {
-                    Toast.makeText(context, "Usuario o contraseña incorrectos", Toast.LENGTH_SHORT).show()
+                        val respuesta : Response<String> = api.iniciarSesion(usuario, contrasena)
+                        if (respuesta.body() == "correcto"){
+                            Toast.makeText(context, "Inicio de sesion con exito", Toast.LENGTH_SHORT).show()
+                            navController.navigate("menu")
+                        }
+                        else {
+                            Toast.makeText(context, "Inicio de sesion incorrecto", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    catch (e: Exception) {
+                        Log.e("API", "Error al intentar iniciar sesion: ${e.message}")
+                    }
                 }
+                //val usuarioValido = "admin"
+               // val contrasenaValida = "12345"
+
+               // if (usuario == usuarioValido && contrasena == contrasenaValida) {
+                   // Toast.makeText(context, "¡Bienvenido, $usuario!", Toast.LENGTH_SHORT).show()
+                   // navController.navigate("menu")
+               // } else {
+                   // Toast.makeText(context, "Usuario o contraseña incorrectos", Toast.LENGTH_SHORT).show()
+                  //  navController.navigate("Error")
+              //  }
             },
             modifier = Modifier.align(Alignment.End),
             colors = ButtonDefaults.buttonColors(
@@ -129,8 +217,27 @@ fun LoginContent(navController: NavHostController, modifier: Modifier) {
     }
 }
 
+
 @Composable
 fun MenuContent(navController: NavHostController, modifier: Modifier) {
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.fondo_animales),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xAAFFFFFF))
+        )
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -150,29 +257,45 @@ fun MenuContent(navController: NavHostController, modifier: Modifier) {
         Button(
             onClick = { navController.navigate("login") },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4E9187)),
+                    shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.align(Alignment.CenterHorizontally),
-        ) { Text("Login") }
+        ) {
+            Icon(Icons.Default.Pets, contentDescription = null, tint = Color.White)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Login") }
 
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = { navController.navigate("mascotas") },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4E9187)),
+            shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.align(Alignment.CenterHorizontally),
-        ) { Text("Mascotas") }
+        ) {
+            Icon(Icons.Default.Pets, contentDescription = null, tint = Color.White)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Mascotas") }
 
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = { navController.navigate("padrinos") },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4E9187)),
+            shape = RoundedCornerShape(16.dp),
             modifier = Modifier.align(Alignment.CenterHorizontally),
-        ) { Text("Padrinos") }
+        ){
+            Icon(Icons.Default.Pets, contentDescription = null, tint = Color.White)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Padrinos") }
 
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = { navController.navigate("apoyo") },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4E9187)),
+            shape = RoundedCornerShape(16.dp),
             modifier = Modifier.align(Alignment.CenterHorizontally),
-        ) { Text("Apoyos") }
+        ) {
+            Icon(Icons.Default.Pets, contentDescription = null, tint = Color.White)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Apoyos") }
     }
 }
 
@@ -200,6 +323,23 @@ fun MascotasFormContent(navController: NavHostController, modifier: Modifier) {
     var raza: String by remember { mutableStateOf(("")) }
     var peso: String by remember { mutableStateOf(("")) }
     var condicion: String by remember { mutableStateOf(("")) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.fondo2),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xAAFFFFFF))
+        )
+    }
 
     Column(
         modifier = modifier
@@ -400,9 +540,26 @@ fun PadrinosFormContent(navController: NavHostController, modifier: Modifier) {
     var telefono: String by remember { mutableStateOf(("")) }
     var correo: String by remember { mutableStateOf(("")) }
 
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.fondo2),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xAAFFFFFF))
+        )
+    }
+
     Column(
         modifier = modifier
-                .fillMaxSize()
+            .fillMaxSize()
             .padding(24.dp)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.Start,
@@ -565,6 +722,22 @@ fun ApoyosFormContent(navController: NavHostController, modifier: Modifier) {
     var id_apoyo: String by remember { mutableStateOf(("")) }
     var monto: String by remember { mutableStateOf(("")) }
     var causa: String by remember { mutableStateOf(("")) }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.fondo2),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xAAFFFFFF))
+        )
+    }
 
     Column(
         modifier = modifier
@@ -731,6 +904,7 @@ fun ApoyosFormContent(navController: NavHostController, modifier: Modifier) {
 @Composable
 fun ApoyoslstContent(navController: NavHostController, modifier: Modifier) {
     val scrollState = rememberScrollState()
+
     data class Apoyos(val id: Int, val mascotas: String,val padrinos:String, val monto: Double, val causa: String)
     val apoyo = remember {
         mutableStateListOf(
@@ -739,6 +913,24 @@ fun ApoyoslstContent(navController: NavHostController, modifier: Modifier) {
             Apoyos(3,"Max", "Valeria Salazar", 2450.00,  "Darle una mejor vida a Max" )
         )
     }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.fondo2),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xAAFFFFFF))
+        )
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -747,7 +939,17 @@ fun ApoyoslstContent(navController: NavHostController, modifier: Modifier) {
             .padding(8.dp),
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Top
-    ) {
+    )
+
+
+    {
+        Text(
+            text = "Tabla de Apoyos",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.ExtraBold,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            color = Color(0xFF2E8B57)
+        )
         Button(
             onClick = {
                 navController.navigate("apoyo")
@@ -768,7 +970,7 @@ fun ApoyoslstContent(navController: NavHostController, modifier: Modifier) {
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
-                apoyo.add(Apoyos(1,"Garfield","Alejandro Vega",6700.00,"Para que Garfiled pueda moverse sin problemas"))
+                apoyo.add(Apoyos(1,"Garfield","Emannuel Cazares",6700.00,"Para que Garfiled pueda moverse sin problemas"))
             },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF914e58),
@@ -790,6 +992,7 @@ fun ApoyoslstContent(navController: NavHostController, modifier: Modifier) {
             Text("Monto", modifier = Modifier.width(100.dp), fontWeight = FontWeight.Bold)
             Text("Causa", modifier = Modifier.width(100.dp), fontWeight = FontWeight.Bold)
             Text("Eliminar", modifier = Modifier.width(100.dp), fontWeight = FontWeight.Bold)
+
         }
         Divider()
         apoyo.forEachIndexed { index, objeto ->
@@ -820,6 +1023,7 @@ fun ApoyoslstContent(navController: NavHostController, modifier: Modifier) {
                 }) {
                     Text("Eliminar")
                 }
+
             }
         }
 
@@ -838,6 +1042,24 @@ fun PadrinoslstContent(navController: NavHostController, modifier: Modifier){
             Padrinos(3,"Mariajose", "Rodriguez", "Femenino", "8781151530" , "majordz@gmail.com" )
         )
     }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.fondo2),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xAAFFFFFF))
+        )
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -847,6 +1069,13 @@ fun PadrinoslstContent(navController: NavHostController, modifier: Modifier){
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Top
     ) {
+        Text(
+            text = "Tabla de Padrinos",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.ExtraBold,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            color = Color(0xFF2E8B57)
+        )
         Button(
             onClick = {
                 navController.navigate("padrinos")
@@ -930,8 +1159,6 @@ fun PadrinoslstContent(navController: NavHostController, modifier: Modifier){
 }
 
 
-
-
 @Composable
 fun MascotaslstContent(navController: NavHostController, modifier: Modifier) {
     val scrollState = rememberScrollState()
@@ -943,6 +1170,24 @@ fun MascotaslstContent(navController: NavHostController, modifier: Modifier) {
             Mascotas(3,"Pelusa", "Perro", "Hembra", "Chihuahua", 2.7, "Problemas cardiacos" )
         )
     }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.fondo2),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xAAFFFFFF))
+        )
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -952,6 +1197,13 @@ fun MascotaslstContent(navController: NavHostController, modifier: Modifier) {
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Top
     ) {
+        Text(
+            text = "Tabla  de Mascotas",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.ExtraBold,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            color = Color(0xFF2E8B57)
+        )
         Button(
             onClick = {
                 navController.navigate("mascotas")
