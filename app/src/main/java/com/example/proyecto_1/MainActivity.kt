@@ -65,10 +65,12 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-data class ModeloRegistro(
-    val dato1: String,
-    val dato2: Double,
-    val dato3: Int
+data class ModeloPadrino(
+    val id: Int,
+    val nombre: String,
+    val sexo: String,
+    val telefono: Int,
+    val correo: String
 )
 interface ApiService {
     @POST("servicio.php?iniciarSesion")
@@ -79,20 +81,22 @@ interface ApiService {
 
         ): Response<String>
 
-    @GET("servicio.php?registros")
-    suspend fun registros(): List<ModeloRegistro>
+    @GET("servicio.php?padrinos")
+    suspend fun registros(): List<ModeloPadrino>
 
     @POST("servicio.php?agregarRegistro")
     @FormUrlEncoded
-    suspend fun agregarRegistro(
-        @Field("dato1") dato1: String,
-        @Field("dato2") dato2: Double,
-        @Field("dato3") dato3: Int
+    suspend fun agregarPadrino(
+        @Field("id") id: Int,
+        @Field("nombre") nombre: String,
+        @Field("sexo") sexo: String,
+        @Field("telefono") telefono: Int,
+        @Field("correo") correo: String
     ): Response<Unit>
 }
 
 val retrofit = Retrofit.Builder()
-    .baseUrl("https://intended-antibody-desperate-relay.trycloudflare.com/api/")
+    .baseUrl("https://semi-flash-eva-technique.trycloudflare.com/api/")
     .addConverterFactory(ScalarsConverterFactory.create())
     .addConverterFactory(GsonConverterFactory.create())
     .build()
