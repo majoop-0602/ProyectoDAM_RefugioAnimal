@@ -2,6 +2,7 @@ package com.example.proyecto_1
 
 import com.example.proyecto_1.R
 import android.os.Bundle
+import android.os.Parcelable
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -39,6 +40,9 @@ import androidx.navigation.compose.rememberNavController
 import com.example.proyecto_1.ui.theme.Proyecto_1Theme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pets
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import kotlinx.android.parcel.Parcelize
 import kotlinx.coroutines.launch
 import retrofit2.Response
 import retrofit2.Retrofit
@@ -65,61 +69,91 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
+
+@Parcelize
 data class ModeloPadrino(
-    val id: Int,
-    val nombre: String,
+    val idPadrino: Int,
+    val nombrePadrino: String,
     val sexo: String,
-    val telefono: Int,
-    val correo: String
-)
+    val telefono: String,
+    val correoElectronico: String
+) : Parcelable
 interface ApiService {
-    @POST("servicio.php?iniciarSesion")
+    @POST("servicio.php?iniciarSesion=1")
     @FormUrlEncoded
     suspend fun iniciarSesion(
         @Field("usuario") usuario: String,
         @Field("contrasena") contrasena: String
 
-        ): Response<String>
+    ): Response<String>
 
-    @GET("servicio.php?padrinos")
-    suspend fun registros(): List<ModeloPadrino>
+    @GET("servicio.php?padrinos=1")
+    suspend fun padrinos(): List<ModeloPadrino>
 
-    @POST("servicio.php?agregarRegistro")
+    @POST("servicio.php?agregarPadrinos=1")
     @FormUrlEncoded
-    suspend fun agregarPadrino(
-        @Field("id") id: Int,
-        @Field("nombre") nombre: String,
+    suspend fun agregarPadrinos(
+        @Field("nombrePadrino") nombrePadrino: String,
         @Field("sexo") sexo: String,
-        @Field("telefono") telefono: Int,
-        @Field("correo") correo: String
-    ): Response<Unit>
+        @Field("telefono") telefono: String,
+        @Field("correoElectronico") correoElectronico: String,
+    ): Response<String>
+
+    @POST("servicio.php?modificarPadrinos=1")
+    @FormUrlEncoded
+    suspend fun modificarPadrinos(
+        @Field("idPadrino") idPadrino: Int,
+        @Field("nombrePadrino") nombrePadrino: String,
+        @Field("sexo") sexo: String,
+        @Field("telefono") telefono: String,
+        @Field("correoElectronico") correoElectronico: String,
+    ): Response<String>
+
+    @POST("servicio.php?eliminarPadrino=1")
+    @FormUrlEncoded
+    suspend fun eliminarPadrino(
+        @Field("idPadrino") idPadrino: Int
+    ): Response<String>
 }
 
 val retrofit = Retrofit.Builder()
-    .baseUrl("https://semi-flash-eva-technique.trycloudflare.com/api/")
+    .baseUrl("https://promising-marina-thumb-hughes.trycloudflare.com/api/servicio.php/")
     .addConverterFactory(ScalarsConverterFactory.create())
     .addConverterFactory(GsonConverterFactory.create())
     .build()
 
 val api = retrofit.create(ApiService::class.java)
 
-
 @Composable
 fun AppContent(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "login") {
+    NavHost(navController = navController, startDestination = "padrinoslst") {
         composable("login") { LoginContent(navController, modifier) }
         composable("menu") { MenuContent(navController, modifier) }
         composable("mascotas") { MascotasFormContent(navController, modifier) }
-        composable("padrinos") { PadrinosFormContent(navController, modifier) }
+        composable("padrinos") {
+            val padrino = navController.previousBackStackEntry
+                ?.savedStateHandle
+                ?.get<ModeloPadrino>("padrinoSeleccionado")
+
+            PadrinosFormContent(
+                navController = navController,
+                padrino = padrino
+            )
+        }
         composable("apoyo") { ApoyosFormContent(navController, modifier) }
         composable("mascotaslst") { MascotaslstContent(navController, modifier) }
         composable("padrinoslst") { PadrinoslstContent(navController, modifier) }
         composable("apoyolst") { ApoyoslstContent(navController, modifier) }
 
+
+
+
     }
 }
+
 
 @Composable
 fun LoginContent(navController: NavHostController, modifier: Modifier) {
@@ -222,6 +256,7 @@ fun LoginContent(navController: NavHostController, modifier: Modifier) {
 }
 
 
+
 @Composable
 fun MenuContent(navController: NavHostController, modifier: Modifier) {
 
@@ -302,6 +337,7 @@ fun MenuContent(navController: NavHostController, modifier: Modifier) {
             Text("Apoyos") }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -527,10 +563,26 @@ fun MascotasFormContent(navController: NavHostController, modifier: Modifier) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PadrinosFormContent(navController: NavHostController, modifier: Modifier) {
+fun PadrinosFormContent( navController: NavHostController, padrino: ModeloPadrino?, modifier: Modifier = Modifier  ) {
     val context = LocalContext.current
-
+    val scope = rememberCoroutineScope()
     data class Opcion(val value: String, val label: String)
+    val sexo_padrino = listOf(
+        Opcion("1", "Masculino"),
+        Opcion("2", "Femenino"),
+        Opcion("3", "Otro")
+    )
+
+    // Variables del formulario, usando padrino si es edición
+    var id_padrino by remember { mutableStateOf(padrino?.idPadrino?.toString() ?: "") }
+    var nombre by remember { mutableStateOf(padrino?.nombrePadrino ?: "") }
+    var telefono by remember { mutableStateOf(padrino?.telefono ?: "") }
+    var correo by remember { mutableStateOf(padrino?.correoElectronico ?: "") }
+    var sexoSeleccionado by remember {
+        mutableStateOf(sexo_padrino.find { it.label == padrino?.sexo } ?: sexo_padrino[0])
+    }
+    var sexopadrinoExpandido by remember { mutableStateOf(false) }
+    /*data class Opcion(val value: String, val label: String)
     val sexo_padrino = listOf(
         Opcion("1", "Masculino"),
         Opcion("2", "Femenino"),
@@ -538,11 +590,18 @@ fun PadrinosFormContent(navController: NavHostController, modifier: Modifier) {
     )
     var sexopadrinoExpandido by remember { mutableStateOf(false) }
     var sexo_p by remember { mutableStateOf(sexo_padrino[0]) }
+
     var id_padrino: String by remember { mutableStateOf(("")) }
     var nombre: String by remember { mutableStateOf(("")) }
-    var apellido1: String by remember { mutableStateOf(("")) }
+
     var telefono: String by remember { mutableStateOf(("")) }
     var correo: String by remember { mutableStateOf(("")) }
+
+    val padrinos = remember {
+        mutableStateListOf<ModeloPadrino>(
+
+        )
+    } */
 
     Box(
         modifier = Modifier
@@ -592,7 +651,8 @@ fun PadrinosFormContent(navController: NavHostController, modifier: Modifier) {
             value = id_padrino,
             onValueChange = { id_padrino = it },
             modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            readOnly = true
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(text = "Nombre",
@@ -600,19 +660,11 @@ fun PadrinosFormContent(navController: NavHostController, modifier: Modifier) {
         TextField(
             value = nombre,
             onValueChange = { nombre = it },
-            placeholder = { Text("Su nombre") },
+            placeholder = { Text("Su nombre y primer apellido") },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Primer Apellido",
-            color = Color(0xFF4E9187))
-        TextField(
-            value = apellido1,
-            onValueChange = { apellido1 = it },
-            placeholder = { Text("Su primer apellido") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+
         Text(text = "Sexo",
             color = Color(0xFF4E9187))
         ExposedDropdownMenuBox(
@@ -620,7 +672,7 @@ fun PadrinosFormContent(navController: NavHostController, modifier: Modifier) {
             onExpandedChange = { sexopadrinoExpandido = !sexopadrinoExpandido }
         ) {
             TextField(
-                value = sexo_p.label,
+                value = sexoSeleccionado.label,
                 onValueChange = {},
                 readOnly = true,
                 label = { Text("Seleccione su sexo") },
@@ -640,7 +692,7 @@ fun PadrinosFormContent(navController: NavHostController, modifier: Modifier) {
                     DropdownMenuItem(
                         text = { Text(opcion.label) },
                         onClick = {
-                            sexo_p = opcion
+                            sexoSeleccionado = opcion
                             sexopadrinoExpandido = false
                         }
                     )
@@ -670,13 +722,45 @@ fun PadrinosFormContent(navController: NavHostController, modifier: Modifier) {
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
-                Toast.makeText(context, "Id Padrino: ${id_padrino}", Toast.LENGTH_SHORT).show()
-                Toast.makeText(context, "Nombre: ${nombre}", Toast.LENGTH_SHORT).show()
-                Toast.makeText(context, "Sexo: ${sexo_p.value}", Toast.LENGTH_SHORT).show()
-                Toast.makeText(context, "Primer Apellido: ${apellido1}", Toast.LENGTH_SHORT).show()
-                Toast.makeText(context, "Telefono: ${telefono}", Toast.LENGTH_SHORT).show()
-                Toast.makeText(context, "Correo: ${correo}", Toast.LENGTH_SHORT).show()
-            },
+                scope.launch {
+                    try {
+                        var respuesta: Response<String> = if (padrino == null) {
+                            api.agregarPadrinos(nombrePadrino = nombre, sexo = sexoSeleccionado.label, telefono = telefono, correoElectronico = correo)
+                        }
+                        else {
+                            api.modificarPadrinos(idPadrino = id_padrino.toInt(), nombrePadrino = nombre, sexo = sexoSeleccionado.label, telefono = telefono, correoElectronico = correo
+                            )
+                        }
+                                val body = respuesta.body()?.trim()?.replace("\n", "")?.replace("\r", "")
+                                val id = body?.toIntOrNull()
+
+                                if (id != null && id > 0) {
+
+                                    //padrinos.add(ModeloPadrino(idPadrino = id, nombrePadrino = nombre, sexo = sexoSeleccionado.label, telefono = telefono, correoElectronico = correo))
+                                    Toast.makeText(context, "Registro exitoso", Toast.LENGTH_SHORT).show()
+                                    navController.navigate("padrinoslst")
+
+                                } else {
+                                    Toast.makeText(context, "Error al guardar padrino", Toast.LENGTH_SHORT).show()
+                                }
+
+
+
+
+                        id_padrino = ""
+                        nombre = ""
+                        telefono = ""
+                        correo = ""
+
+
+
+
+                    } catch (e: Exception) {
+                        Log.e("API", "Error al intentar agregar padrino: ${e.message}")
+                    }
+                }
+            }
+        ,
             modifier = Modifier.align(Alignment.End),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF4E9187),
@@ -1037,15 +1121,34 @@ fun ApoyoslstContent(navController: NavHostController, modifier: Modifier) {
 
 @Composable
 fun PadrinoslstContent(navController: NavHostController, modifier: Modifier){
-    val scrollState = rememberScrollState()
-    data class Padrinos(val id: Int, val nombre: String,val apellido:String, val sexo: String, val telefono: String,val correo: String)
+
     val padrinos = remember {
-        mutableStateListOf(
-            Padrinos(1,"Valeria","Salazar", "Femenino", "8781034180",  "val26@gmail.com"),
-            Padrinos(2, "Janeth", "Piña", "Femenino", "8781541493" ,"janeth13@gmail.com" ),
-            Padrinos(3,"Mariajose", "Rodriguez", "Femenino", "8781151530" , "majordz@gmail.com" )
+        mutableStateListOf<ModeloPadrino>(
+            //Padrinos(1,"Valeria","Salazar", "Femenino", "8781034180",  "val26@gmail.com"),
+            //Padrinos(2, "Janeth", "Piña", "Femenino", "8781541493" ,"janeth13@gmail.com" ),
+            //Padrinos(3,"Mariajose", "Rodriguez", "Femenino", "8781151530" , "majordz@gmail.com" )
         )
     }
+
+
+
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        try {
+            val respuesta = api.padrinos()
+            Log.e("API", "Respuesta: $respuesta")
+            padrinos.clear()
+            padrinos.addAll(respuesta)
+        }
+        catch (e: Exception) {
+            Log.e("API", "Error al cargar padrinos: ${e.message}")
+        }
+    }
+
+
+    val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier
@@ -1100,7 +1203,7 @@ fun PadrinoslstContent(navController: NavHostController, modifier: Modifier){
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
-                padrinos.add(Padrinos(1,"Alejandro","Vega","Masculino","8781023940","aleVe11@gmail.com"))
+               // padrinos.add(Padrinos(1,"Alejandro","Vega","Masculino","8781023940","aleVe11@gmail.com"))
             },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF914e58),
@@ -1115,14 +1218,22 @@ fun PadrinoslstContent(navController: NavHostController, modifier: Modifier){
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
+        val ColId = 100.dp
+        val ColNombre = 150.dp
+        val ColSexo = 120.dp
+        val ColTelefono = 150.dp
+        val ColCorreo = 200.dp
+        val ColEliminar = 100.dp
+        val ColModificar = 100.dp
+
         Row {
-            Text("Id", modifier = Modifier.width(150.dp), fontWeight = FontWeight.Bold)
-            Text("Nombre", modifier = Modifier.width(100.dp), fontWeight = FontWeight.Bold)
-            Text("Apellido", modifier = Modifier.width(100.dp), fontWeight = FontWeight.Bold)
-            Text("Sexo", modifier = Modifier.width(100.dp), fontWeight = FontWeight.Bold)
-            Text("Teléfono", modifier = Modifier.width(100.dp), fontWeight = FontWeight.Bold)
-            Text("Correo", modifier = Modifier.width(100.dp), fontWeight = FontWeight.Bold)
-            Text("Eliminar", modifier = Modifier.width(100.dp), fontWeight = FontWeight.Bold)
+            Text("Id", modifier = Modifier.width(ColId), fontWeight = FontWeight.Bold)
+            Text("Nombre", modifier = Modifier.width(ColNombre), fontWeight = FontWeight.Bold)
+            Text("Sexo", modifier = Modifier.width(ColSexo), fontWeight = FontWeight.Bold)
+            Text("Teléfono", modifier = Modifier.width(ColTelefono), fontWeight = FontWeight.Bold)
+            Text("Correo", modifier = Modifier.width(ColCorreo), fontWeight = FontWeight.Bold)
+            Text("Eliminar", modifier = Modifier.width(ColEliminar), fontWeight = FontWeight.Bold)
+            Text("Modificar", modifier = Modifier.width(ColModificar), fontWeight = FontWeight.Bold)
         }
         Divider()
         padrinos.forEachIndexed { index, objeto ->
@@ -1132,28 +1243,55 @@ fun PadrinoslstContent(navController: NavHostController, modifier: Modifier){
                 modifier = Modifier
                     .background(bgColor)
             ) {
-                Text("${objeto.id} ", modifier = Modifier
-                    .width(100.dp), Color.Gray
+                Text(objeto.idPadrino.toString(), modifier = Modifier
+                    .width(ColId), Color.Gray
                 )
-                Text(objeto.nombre, modifier = Modifier
-                    .width(150.dp), Color.Gray
+                Text(objeto.nombrePadrino, modifier = Modifier
+                    .width(ColNombre), Color.Gray
                 )
-                Text(objeto.apellido, modifier = Modifier
-                    .width(150.dp), Color.Gray
-                )
+
                 Text(objeto.sexo, modifier = Modifier
-                    .width(150.dp), Color.Gray
+                    .width(ColSexo), Color.Gray
                 )
                 Text(objeto.telefono, modifier = Modifier
-                    .width(150.dp), Color.Gray
+                    .width(ColTelefono), Color.Gray
                 )
-                Text(objeto.correo, modifier = Modifier
-                    .width(150.dp), Color.Gray
+                Text(objeto.correoElectronico, modifier = Modifier
+                    .width(ColCorreo), Color.Gray
                 )
                 Button(onClick = {
-                    padrinos.removeAt(index)
+                  val id: Int = padrinos[index].idPadrino
+                    scope.launch {
+                        try {
+
+                            val respuesta : Response<String> = api.eliminarPadrino(id)
+                            val body = respuesta.body()?.trim()
+                            if (body == "correcto"){
+                                Toast.makeText(context, "Padrino eliminado con exito", Toast.LENGTH_SHORT).show()
+                                padrinos.removeAt(index)
+                            }
+                            else {
+                                Toast.makeText(context, "Padrino no eliminado", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        catch (e: Exception) {
+                            Log.e("API", "Error al intentar eliminar padrino: ${e.message}")
+                        }
+                    }
+
                 }) {
                     Text("Eliminar")
+                }
+                Button(onClick = {
+                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                        "padrinoSeleccionado",
+                        padrinos[index]
+                    )
+                    navController.navigate("padrinos")
+
+
+                }) {
+                    Text("Editar")
                 }
             }
         }
