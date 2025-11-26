@@ -128,20 +128,20 @@ data class ModeloUsuario(
 ) : Parcelable
 
 interface ApiService {
-    @POST("rodriguez-ballesteros.php?iniciarSesion=1")
+    @POST("refugio-animales-a.php?iniciarSesion=1")
     @FormUrlEncoded
     suspend fun iniciarSesion(
         @Field("usuario") usuario: String,
         @Field("contrasena") contrasena: String
 
     ): Response<String>
-    @POST("rodriguez-ballesteros.php?padrinos=1")
+    @POST("refugio-animales-a.php?padrinos=1")
     @FormUrlEncoded
     suspend fun padrinos(@Field("dummy") dummy: Int = 1): List<ModeloPadrino>
     /*@GET("rodriguez-ballesteros.php?padrinos=1")
     suspend fun padrinos(): List<ModeloPadrino> */
 
-    @POST("rodriguez-ballesteros.php?agregarPadrinos=1")
+    @POST("refugio-animales-a.php?agregarPadrinos=1")
     @FormUrlEncoded
     suspend fun agregarPadrinos(
         @Field("nombrePadrino") nombrePadrino: String,
@@ -150,7 +150,7 @@ interface ApiService {
         @Field("correoElectronico") correoElectronico: String,
     ): Response<String>
 
-    @POST("rodriguez-ballesteros.php?modificarPadrinos=1")
+    @POST("refugio-animales-a.php?modificarPadrinos=1")
     @FormUrlEncoded
     suspend fun modificarPadrinos(
         @Field("idPadrino") idPadrino: Int,
@@ -160,14 +160,14 @@ interface ApiService {
         @Field("correoElectronico") correoElectronico: String,
     ): Response<String>
 
-    @POST("rodriguez-ballesteros.php?eliminarPadrino=1")
+    @POST("refugio-animales-a.php?eliminarPadrino=1")
     @FormUrlEncoded
     suspend fun eliminarPadrino(
         @Field("idPadrino") idPadrino: Int
     ): Response<String>
 
 
-    @POST("salazar-valenzuela.php?agregarMascota=1")
+    @POST("refugio-animales-a.php?agregarMascota=1")
     @FormUrlEncoded
     suspend fun agregarMascota(
         @Field("nombre") nombre: String,
@@ -178,7 +178,7 @@ interface ApiService {
         @Field("condiciones") condiciones: String?,
     ): Response<String>
 
-    @POST("salazar-valenzuela.php?modificarMascota=1")
+    @POST("refugio-animales-a.php?modificarMascota=1")
     @FormUrlEncoded
     suspend fun modificarMascota(
         @Field("idMascota") idMascota: Int,
@@ -192,29 +192,29 @@ interface ApiService {
 
     /*@GET("salazar-valenzuela.php?mascotas=1")
     suspend fun mascotas(): List<ModeloMascota>*/
-    @POST("salazar-valenzuela.php?mascotas=1")
+    @POST("refugio-animales-a.php?mascotas=1")
     @FormUrlEncoded
     suspend fun mascotas(
         @Field("dummy") dummy: Int = 1
     ): List<ModeloMascota>
 
-    @POST("salazar-valenzuela.php?eliminarMascota=1")
+    @POST("refugio-animales-a.php?eliminarMascota=1")
     @FormUrlEncoded
     suspend fun eliminarMascota(
         @Field("idMascota") idMascota: Int
     ): Response<String>
 
 
-    @GET("pina-gutierrez.php?apoyo")
+    @GET("refugio-animales-a.php?apoyo")
     suspend fun apoyo(): List<ModeloApoyo>
 
-    @GET("pina-gutierrez.php?opcionMascota")
+    @GET("refugio-animales-a.php?opcionMascota")
     suspend fun opcionMascota(): List<OpcionCategoria>
 
-    @GET("pina-gutierrez.php?opcionPadrino")
+    @GET("refugio-animales-a.php?opcionPadrino")
     suspend fun opcionPadrino(): List<OpcionCategoria>
 
-    @POST("pina-gutierrez.php?agregarApoyo")
+    @POST("refugio-animales-a.php?agregarApoyo")
     @FormUrlEncoded
     suspend fun agregarApoyo(
         @Field("mascota") mascota: Int,
@@ -223,7 +223,7 @@ interface ApiService {
         @Field("causa") causa: String
     ): Response<String>
 
-    @POST("pina-gutierrez.php?modificarApoyo")
+    @POST("refugio-animales-a.php?modificarApoyo")
     @FormUrlEncoded
     suspend fun modificarApoyo(
         @Field("idApoyo") idApoyo: Int,
@@ -233,7 +233,7 @@ interface ApiService {
         @Field("causa") causa: String
     ): Response<String>
 
-    @POST("pina-gutierrez.php?eliminarApoyo")
+    @POST("refugio-animales-a.php?eliminarApoyo")
     @FormUrlEncoded
     suspend fun eliminarApoyo(
         @Field("idApoyo") idApoyo: Int
@@ -242,18 +242,18 @@ interface ApiService {
 
 
     //-------DEMOSTRACION EXTRA--------
-    @POST("rodriguez-ballesteros.php?usuarios=1")
+    @POST("refugio-animales-a.php?usuarios=1")
     @FormUrlEncoded
     suspend fun usuarios(@Field("dummy") dummy: Int = 1): List<ModeloUsuario>
 
-    @POST("rodriguez-ballesteros.php?agregarUsuario=1")
+    @POST("refugio-animales-a.php?agregarUsuario=1")
     @FormUrlEncoded
     suspend fun agregarUsuario(
         @Field("usuario") usuario: String,
         @Field("contrasena") contrasena: String
     ): Response<String>
 
-    @POST("rodriguez-ballesteros.php?modificarUsuario=1")
+    @POST("refugio-animales-a.php?modificarUsuario=1")
     @FormUrlEncoded
     suspend fun modificarUsuario(
         @Field("id") id: Int,
@@ -261,7 +261,7 @@ interface ApiService {
         @Field("contrasena") contrasena: String
     ): Response<String>
 
-    @POST("rodriguez-ballesteros.php?eliminarUsuario=1")
+    @POST("refugio-animales-a.php?eliminarUsuario=1")
     @FormUrlEncoded
     suspend fun eliminarUsuario(
         @Field("id") id: Int
@@ -1414,14 +1414,22 @@ fun ApoyoslstContent(navController: NavHostController, modifier: Modifier) {
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
+
+        val ColId = 100.dp
+        val ColMascota = 150.dp
+        val ColPadrino = 150.dp
+        val ColMonto = 120.dp
+        val ColCausa = 200.dp
+        val ColEliminar = 100.dp
+        val ColModificar = 100.dp
         Row {
-            Text("Id", modifier = Modifier.width(150.dp), fontWeight = FontWeight.Bold)
-            Text("Mascota", modifier = Modifier.width(100.dp), fontWeight = FontWeight.Bold)
-            Text("Padrino", modifier = Modifier.width(100.dp), fontWeight = FontWeight.Bold)
-            Text("Monto", modifier = Modifier.width(100.dp), fontWeight = FontWeight.Bold)
-            Text("Causa", modifier = Modifier.width(100.dp), fontWeight = FontWeight.Bold)
-            Text("Eliminar", modifier = Modifier.width(100.dp), fontWeight = FontWeight.Bold)
-            Text("Editar", modifier = Modifier.width(100.dp), fontWeight = FontWeight.Bold)
+            Text("Id", modifier = Modifier.width(ColId), fontWeight = FontWeight.Bold)
+            Text("Mascota", modifier = Modifier.width(ColMascota), fontWeight = FontWeight.Bold)
+            Text("Padrino", modifier = Modifier.width(ColPadrino), fontWeight = FontWeight.Bold)
+            Text("Monto", modifier = Modifier.width(ColMonto), fontWeight = FontWeight.Bold)
+            Text("Causa", modifier = Modifier.width(ColCausa), fontWeight = FontWeight.Bold)
+            Text("Eliminar", modifier = Modifier.width(ColEliminar), fontWeight = FontWeight.Bold)
+            Text("Editar", modifier = Modifier.width(ColModificar), fontWeight = FontWeight.Bold)
 
         }
         Divider()
@@ -1434,19 +1442,19 @@ fun ApoyoslstContent(navController: NavHostController, modifier: Modifier) {
 
                 ) {
                 Text("${objeto.idApoyo} ", modifier = Modifier
-                    .width(100.dp), Color.Gray
+                    .width(ColId), Color.Gray
                 )
                 Text(objeto.idMascota.toString(), modifier = Modifier
-                    .width(150.dp), Color.Gray
+                    .width(ColMascota), Color.Gray
                 )
                 Text(objeto.idPadrino.toString(), modifier = Modifier
-                    .width(150.dp), Color.Gray
+                    .width(ColPadrino), Color.Gray
                 )
                 Text("$${objeto.monto} ", modifier = Modifier
-                    .width(100.dp), Color.Gray
+                    .width(ColMonto), Color.Gray
                 )
                 Text(objeto.causa, modifier = Modifier
-                    .width(150.dp), Color.Gray
+                    .width(ColCausa), Color.Gray
                 )
                 Button(onClick = {
                     val idApoyo: Int = apoyo[index].idApoyo
